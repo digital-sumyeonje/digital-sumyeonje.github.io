@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>편안편안 메모리얼</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Noto+Sans+KR:wght@400;500;700;900&family=Shippori+Mincho:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #f1eeeb;   /* warm off-white */
+    --surface:   #ffffff;
+    --soft:      #e6e2de;
+    --line:      #c9c5c1;
+    --gray:      #8a8784;
+    --mid:       #5a5754;
+    --ink:       #1a1a1a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    font-family: 'Noto Sans KR', 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    overflow: hidden;
+    height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button {
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: inherit;
+  }
+
+  /* ============================
+     PAGE TRANSITIONS
+     each top-level <section> is a fixed full-screen page.
+     Only `.active` page is visible. Wheel scrolling switches.
+     ============================ */
+  .page {
+    position: fixed;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(28px);
+    transition: opacity 0.65s cubic-bezier(.2,.8,.2,1),
+                transform 0.65s cubic-bezier(.2,.8,.2,1);
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .page.active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  /* ============================
+     TITLE SCREEN
+     ============================ */
+  #title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .title-text {
+    font-family: 'Shippori Mincho', 'Noto Sans KR', serif;
+    font-weight: 800;
+    font-size: clamp(3rem, 11vw, 9rem);
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    color: var(--ink);
+    text-align: center;
+    user-select: none;
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 8vh;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.85rem;
+    color: var(--mid);
+    letter-spacing: 0.3em;
+    animation: bounceDown 1.8s ease-in-out infinite;
+  }
+
+  @keyframes bounceDown {
+    0%, 100% { transform: translate(-50%, 0); opacity: 0.6; }
+    50%      { transform: translate(-50%, 8px); opacity: 1; }
+  }
+
+  /* ============================
+     HEROINE SELECT
+     ============================ */
+  #heroine-select {
+    background: var(--bg);
+    padding: 8vh 5vw;
+  }
+
+  .select-header {
+    text-align: center;
+    margin-bottom: 6vh;
+  }
+
+  .select-header h2 {
+    font-family: 'Shippori Mincho', 'Noto Sans KR', serif;
+    font-size: clamp(1.4rem, 2.6vw, 2rem);
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: 0.08em;
+  }
+
+  .select-header .small {
+    font-size: 0.78rem;
+    color: var(--gray);
+    margin-top: 0.6rem;
+    letter-spacing: 0.35em;
+  }
+
+  .heroine-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 3rem 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .heroine-card {
+    position: relative;
+    cursor: pointer;
+    text-align: center;
+    transition: transform 0.25s ease;
+  }
+
+  .heroine-card:hover { transform: translateY(-6px); }
+
+  .silhouette-wrap {
+    width: 100%;
+    aspect-ratio: 1093 / 1089;
+    position: relative;
+    background: var(--soft);
+    -webkit-mask-image: url('heroine-1-mask.png');
+            mask-image: url('heroine-1-mask.png');
+    -webkit-mask-size: contain;
+            mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+            mask-position: center;
+    overflow: hidden;
+  }
+
+  .silhouette-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    
+  }
+
+  .heroine-label {
+    margin-top: 1.1rem;
+    font-size: 1rem;
+    color: var(--ink);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+
+  .heroine-label .loc {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--gray);
+    margin-top: 0.3rem;
+    letter-spacing: 0.1em;
+  }
+
+  /* mini affection display below the card */
+  .aff-mini {
+    margin-top: 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    color: var(--mid);
+    letter-spacing: 0.05em;
+  }
+
+  .aff-mini-icon {
+    color: var(--ink);
+    font-size: 0.85rem;
+    line-height: 1;
+  }
+
+  .aff-mini-bar {
+    width: 70px;
+    height: 6px;
+    border: 1px solid var(--ink);
+    background: #fff;
+    overflow: hidden;
+    border-radius: 1px;
+  }
+
+  .aff-mini-fill {
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: var(--ink);
+    transition: width 0.4s cubic-bezier(.2,.8,.2,1);
+  }
+
+  .aff-mini-pct {
+    min-width: 32px;
+    text-align: left;
+    font-variant-numeric: tabular-nums;
+    color: var(--mid);
+  }
+
+  /* ============================
+     MAIN FLOW
+     ============================ */
+  #main-flow {
+    position: fixed;
+    inset: 0;
+    background: var(--surface);
+    z-index: 50;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    overflow: hidden;
+    opacity: 1;
+    transition: opacity 0.4s ease;
+  }
+
+  #main-flow.hidden {
+    display: none;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .mf-header {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    padding: 1.6vh 2vw;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+    z-index: 5;
+  }
+
+  .back-btn {
+    font-size: 1.4rem;
+    color: var(--ink);
+    padding: 0.4rem 0.8rem;
+    transition: transform 0.15s ease;
+  }
+  .back-btn:hover { transform: translateX(-3px); }
+
+  .date-display {
+    text-align: center;
+    font-family: 'Shippori Mincho', 'Noto Sans KR', serif;
+    font-size: 1.05rem;
+    color: var(--ink);
+    letter-spacing: 0.1em;
+  }
+
+  .header-spacer { width: 60px; }
+
+  .mf-body {
+    display: grid;
+    grid-template-columns: minmax(280px, 360px) 1fr;
+    gap: 2rem;
+    padding: 2.5vh 2.5vw;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* ----- left panel ----- */
+  .mf-left {
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .preview-thumb {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: 1.5px solid var(--ink);
+    overflow: hidden;
+    background: #000;
+  }
+
+  .preview-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .tip-block {
+    border: 1.5px solid var(--ink);
+    background: var(--surface);
+    overflow: hidden;
+  }
+
+  .tip-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.6rem;
+    padding: 0.55rem 1rem;
+    border-bottom: 1.5px solid var(--ink);
+    font-size: 0.95rem;
+    color: var(--ink);
+    text-align: left;
+    background: var(--surface);
+  }
+
+  .tip-toggle .arrow {
+    display: inline-block;
+    transition: transform 0.2s ease;
+  }
+  .tip-block.collapsed .tip-toggle .arrow { transform: rotate(-90deg); }
+
+  .tip-details {
+    padding: 1rem 1.1rem;
+    font-size: 0.85rem;
+    line-height: 1.7;
+    color: var(--ink);
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    overflow: hidden;
+  }
+
+  .tip-block.collapsed .tip-details {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .tip-row {
+    display: grid;
+    grid-template-columns: 50px 1fr;
+    gap: 0.8rem;
+  }
+
+  .tip-row .k { color: var(--gray); font-size: 0.82rem; }
+  .tip-row .v { color: var(--ink); word-break: keep-all; }
+
+  /* choices */
+  .choices {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    margin-top: 0.2rem;
+  }
+
+  .choice {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: var(--surface);
+    border: 1.2px solid var(--line);
+    border-radius: 28px;
+    padding: 0.85rem 0.6rem 0.85rem 1.4rem;
+    font-size: 0.92rem;
+    color: var(--ink);
+    text-align: left;
+    transition: transform 0.15s ease, background 0.2s ease, border-color 0.2s ease;
+  }
+
+  .choice:hover {
+    background: var(--soft);
+    border-color: var(--ink);
+    transform: translateX(2px);
+  }
+
+  .choice:active { transform: translateX(2px) scale(0.98); }
+
+  .choice .ctext { flex: 1; padding-right: 0.6rem; line-height: 1.3; }
+
+  .choice .cnum {
+    flex-shrink: 0;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: #fff;
+    font-size: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+  }
+
+  /* ----- right stage ----- */
+  .mf-right {
+    position: relative;
+    background-color: var(--surface);
+    background-image: radial-gradient(circle, #c9c5c1 1.6px, transparent 1.8px);
+    background-size: 22px 22px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+  }
+
+  .silhouette-wrap-main {
+    position: relative;
+    height: 88%;
+    aspect-ratio: 1093 / 1089;
+    -webkit-mask-image: url('heroine-1-mask.png');
+            mask-image: url('heroine-1-mask.png');
+    -webkit-mask-size: contain;
+            mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+            mask-position: center;
+    background: #000;
+    overflow: hidden;
+    transition: filter 0.5s ease;
+  }
+
+  .video-inner { position: absolute; inset: 0; overflow: hidden; }
+
+  .video-inner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .video-inner iframe {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    height: 100%;
+    width: calc(100% * 16 / 9);
+    transform: translateX(-50%);
+    border: 0;
+    pointer-events: auto;
+  }
+
+  .aff-meter {
+    position: absolute;
+    top: 4%;
+    right: 3%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.7rem;
+    z-index: 10;
+  }
+
+  .aff-bar-v {
+    width: 24px;
+    height: 220px;
+    border: 1.5px solid var(--ink);
+    background: var(--surface);
+    position: relative;
+    overflow: hidden;
+    border-radius: 3px;
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .aff-fill-v {
+    width: 100%;
+    height: 0%;
+    background: var(--ink);
+    transition: height 0.45s cubic-bezier(.2,.8,.2,1);
+  }
+
+  .heart-icon {
+    font-size: 1.9rem;
+    color: var(--ink);
+    transition: transform 0.2s ease, color 0.3s ease;
+    user-select: none;
+  }
+
+  .heart-icon.pulse { transform: scale(1.3); }
+
+  .subtitle-overlay {
+    position: absolute;
+    left: 4%;
+    right: 12%;
+    bottom: 5%;
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    padding: 0.85rem 1.1rem;
+    border-radius: 3px;
+    z-index: 8;
+    pointer-events: none;
+    backdrop-filter: blur(4px);
+  }
+
+  .sub-row1 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.85);
+    margin-bottom: 0.3rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sub-row1 .sub-title {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: 0.02em;
+  }
+
+  .sub-row1 .sub-dots {
+    color: #fff;
+    letter-spacing: 0.15em;
+    font-size: 0.65rem;
+    opacity: 0.85;
+  }
+
+  .sub-row2 {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #fff;
+    font-family: 'Shippori Mincho', 'Noto Sans KR', serif;
+    min-height: 1.3em;
+  }
+
+  .sub-text { opacity: 0; transition: opacity 0.4s ease; }
+  .sub-text.show { opacity: 1; }
+
+  .debug {
+    position: absolute;
+    bottom: 4px;
+    left: 6px;
+    font-size: 0.65rem;
+    color: var(--gray);
+    font-family: monospace;
+    z-index: 100;
+    background: rgba(255,255,255,0.85);
+    padding: 2px 5px;
+    pointer-events: none;
+  }
+
+  /* page indicator dots (bottom-right of viewport) */
+  .page-indicator {
+    position: fixed;
+    right: 1.5vw;
+    bottom: 50%;
+    transform: translateY(50%);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 30;
+  }
+
+  .page-indicator .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line);
+    transition: background 0.25s ease, transform 0.25s ease;
+    cursor: pointer;
+    border: none;
+    padding: 0;
+  }
+
+  .page-indicator .dot.active {
+    background: var(--ink);
+    transform: scale(1.4);
+  }
+
+  /* responsive */
+  @media (max-width: 920px) {
+    .mf-body { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+    .mf-left { order: 2; max-height: 50vh; }
+    .mf-right { order: 1; min-height: 45vh; }
+    .aff-bar-v { height: 140px; }
+    .heroine-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 2rem 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============== TITLE ============== -->
+<section id="title" class="page active">
+  <div class="title-text">편안편안<br>메모리얼</div>
+  <div class="scroll-hint">스크롤하기 ▾</div>
+</section>
+
+<!-- ============== HEROINE SELECT ============== -->
+<section id="heroine-select" class="page">
+  <div class="select-header">
+    <h2>공략할 대상을 선택해 주세요</h2>
+    <div class="small">HEROINE SELECT</div>
+  </div>
+  <div class="heroine-grid" id="heroineGrid">
+    <!-- cards injected by JS -->
+  </div>
+</section>
+
+<!-- ============== PAGE INDICATOR DOTS ============== -->
+<div class="page-indicator" id="pageIndicator"></div>
+
+<!-- ============== MAIN FLOW (overlay above pages) ============== -->
+<div id="main-flow" class="hidden" aria-hidden="true">
+  <div class="mf-header">
+    <button class="back-btn" id="closeBtn" title="뒤로가기">←</button>
+    <div class="date-display" id="dateDisplay"></div>
+    <div class="header-spacer"></div>
+  </div>
+
+  <div class="mf-body">
+    <aside class="mf-left">
+      <div class="preview-thumb">
+        <img id="previewThumb" alt="">
+      </div>
+
+      <div class="tip-block" id="tipBlock">
+        <button class="tip-toggle" id="tipToggle">
+          <span class="arrow">▼</span>
+          <span>tip!</span>
+        </button>
+        <div class="tip-details">
+          <div class="tip-row"><span class="k">이름</span><span class="v" id="tipName"></span></div>
+          <div class="tip-row"><span class="k">생일</span><span class="v" id="tipBirthday"></span></div>
+          <div class="tip-row"><span class="k">본가</span><span class="v" id="tipHome"></span></div>
+        </div>
+      </div>
+
+      <div class="choices" id="choices">
+        <button class="choice" data-text="안녕?">
+          <span class="ctext">안녕?</span><span class="cnum">1</span>
+        </button>
+        <button class="choice" data-text="우리, 벌써 이만큼이나 함께했네">
+          <span class="ctext">우리, 벌써 이만큼이나 함께했네</span><span class="cnum">2</span>
+        </button>
+        <button class="choice" data-text="오늘 재밌었어!">
+          <span class="ctext">오늘 재밌었어!</span><span class="cnum">3</span>
+        </button>
+        <button class="choice" data-text="다음에 또 만나자">
+          <span class="ctext">다음에 또 만나자</span><span class="cnum">4</span>
+        </button>
+      </div>
+    </aside>
+
+    <section class="mf-right">
+      <div class="silhouette-wrap-main" id="silhouetteWrap">
+        <div class="video-inner" id="videoInner"></div>
+      </div>
+
+      <div class="aff-meter">
+        <div class="aff-bar-v">
+          <div class="aff-fill-v" id="affectionFill"></div>
+        </div>
+        <div class="heart-icon" id="heart">♥</div>
+      </div>
+
+      <div class="subtitle-overlay">
+        <div class="sub-row1">
+          <span class="sub-title" id="subTitle"></span>
+          <span class="sub-dots">●●●●</span>
+        </div>
+        <div class="sub-row2">
+          <span class="sub-text" id="subtitleText"></span>
+        </div>
+      </div>
+
+      <div class="debug" id="debug">affection: 0</div>
+    </section>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   DATA
+   ========================================================= */
+const heroines = [
+  {
+    name: "젤다 안 해본 뇌 🧠 젤다의 전설: 야생의 숨결 EP.1",
+    location: "공원",
+    title: "젤다 안 해본 뇌 🧠 젤다의 전설: 야생의 숨결 EP.1",
+    birthday: "2025년 6월 26일",
+    home: "침착맨 플러스",
+    youtubeId: "ru5IetkEZWI",
+    subs: [
+      "메오사마시테",
+      "왜 깨벗고 있냐?",
+      "어, 안농이 있어요. 저기 안농",
+      "저 하트 세 개 너무 페르시아 왕자인데",
+      "이동 조작 설명. 숙이기, 뛰기, 액션 다 했어",
+      "원숭아. 이걸 하는 건가?",
+      "제 주인공 제 제 뭐 이름 뭐라고? 링크 링크 호빗이에요",
+      "호빗 같은데 엘프야? 관제재형 주인공 프로도 같잖아",
+      "뭐야? 이거 하는 건 아닌가 봐. 조사 시거스톤",
+      "어, 시커스톤",
+      "미친 우주선이냐? 시거스톤 댔더니 엄청나게 발달한 과학력이",
+      "시작의 탑. 여기까지 시작인가 봐",
+      "주변 맵 정보의 입수를 시작합니다",
+      "이제 맵이 다 보이나 보다",
+      "주변 맵이 추가됐습니다",
+      "시거스톤이 가르키는 곳 컴플리트",
+      "한번 확인해 볼 필요는 있었어요",
+      "어 뭐야? 옛날 그거네",
+      "움직인다. 오케이 나 파악했어",
+      "와 아니 죽음의 코스 이거 너무 미쳤어",
+    ]
+  },
+  {
+    name: "긴펄",
+    location: "심사대",
+    title: "Papers, Please — 동무, 려권 내라우",
+    birthday: "2024년 10월 3일",
+    home: "긴펄 (Ginpearl)",
+    youtubeId: "h1Q2kSNnC24",
+    subs: [
+      "오늘도 시작합니다",
+      "서류 확인 부탁드립니다",
+      "흠... 이 사람은",
+      "다음 분",
+      "잠시만요",
+      "서류가 좀 이상한데",
+      "오케이 통과",
+      "음...",
+      "다음 분 들어오세요",
+      "서류 주세요",
+      "아 이거 문제있는데",
+      "거절하겠습니다",
+      "다음",
+      "네 통과",
+    ]
+  },
+  {
+    name: "소금라떼, 화채, 오미자, 민트초코라떼, 메론소다",
+    location: "카페",
+    title: "소금라떼, 화채, 오미자, 민트초코라떼, 메론소다",
+    birthday: "2021년 9월 4일",
+    home: "햄튜브",
+    youtubeId: "K_TTHV5bLcM",
+    subs: [
+      "안녕하세요 여러분",
+      "오늘은 음료 만들어볼게요",
+      "먼저 소금라떼부터",
+      "음 향이 좋네요",
+      "이렇게 섞어주시면 돼요",
+      "오 맛있다",
+      "다음은 화채",
+      "여름에 딱이죠",
+      "음~",
+      "이번엔 오미자",
+      "색이 정말 예뻐요",
+      "한 모금",
+      "아 시원해",
+    ]
+  },
+  {
+    name: "틀어놓고 주무세요 (1)",
+    location: "연구실",
+    title: "틀어놓고 주무세요 (1)",
+    birthday: "2025년 4월 24일",
+    home: "장동선의 궁금한 뇌",
+    youtubeId: "1BPKHQVanZY",
+    subs: [
+      "안녕하세요",
+      "오늘은 수면에 대한 이야기입니다",
+      "많은 분들이 잠을 잘 못 주무시는데요",
+      "뇌과학적으로 보면",
+      "우리가 잠들기 직전에",
+      "뇌에서 일어나는 일은",
+      "사실 꽤 복잡합니다",
+      "여러 신경전달물질이 분비되면서",
+      "점점 의식이 흐려지는 거죠",
+      "이때 중요한 건",
+      "외부 자극을 어떻게 받아들이냐인데",
+      "재밌는 건 말이죠",
+      "완전한 무음보다",
+      "적당한 소리가 있을 때",
+    ]
+  },
+  {
+    name: "이시다 아키라의 코다와리 클럽 1회 [취미]",
+    location: "라디오 부스",
+    title: "이시다 아키라의 코다와리 클럽 1회 [취미]",
+    birthday: "2025년 3월 11일",
+    home: "halohaloiitenki",
+    youtubeId: "bX2i38WqbC0",
+    subs: [
+      "안녕하세요 여러분",
+      "이시다 아키라입니다",
+      "오늘의 주제는 취미인데요",
+      "제 취미는 사실",
+      "여러 가지가 있어서",
+      "음...",
+      "특히 요즘에는",
+      "책 읽는 걸 좋아합니다",
+      "조용한 밤에",
+      "차 한 잔과 함께",
+      "그런 시간이 정말 좋죠",
+      "여러분은 어떠세요",
+      "편지 많이 보내주세요",
+    ]
+  },
+   {
+    name: "이시다 아키라의 코다와리 클럽 1회 [취미]",
+    location: "라디오 부스",
+    title: "이시다 아키라의 코다와리 클럽 1회 [취미]",
+    birthday: "2025년 3월 11일",
+    home: "halohaloiitenki",
+    youtubeId: "bX2i38WqbC0",
+    subs: [
+      "안녕하세요 여러분",
+      "이시다 아키라입니다",
+      "오늘의 주제는 취미인데요",
+      "제 취미는 사실",
+      "여러 가지가 있어서",
+      "음...",
+      "특히 요즘에는",
+      "책 읽는 걸 좋아합니다",
+      "조용한 밤에",
+      "차 한 잔과 함께",
+      "그런 시간이 정말 좋죠",
+      "여러분은 어떠세요",
+      "편지 많이 보내주세요",
+    ]
+  },
+   {
+    name: "이시다 아키라의 코다와리 클럽 1회 [취미]",
+    location: "라디오 부스",
+    title: "이시다 아키라의 코다와리 클럽 1회 [취미]",
+    birthday: "2025년 3월 11일",
+    home: "halohaloiitenki",
+    youtubeId: "bX2i38WqbC0",
+    subs: [
+      "안녕하세요 여러분",
+      "이시다 아키라입니다",
+      "오늘의 주제는 취미인데요",
+      "제 취미는 사실",
+      "여러 가지가 있어서",
+      "음...",
+      "특히 요즘에는",
+      "책 읽는 걸 좋아합니다",
+      "조용한 밤에",
+      "차 한 잔과 함께",
+      "그런 시간이 정말 좋죠",
+      "여러분은 어떠세요",
+      "편지 많이 보내주세요",
+    ]
+  },
+   {
+    name: "이시다 아키라의 코다와리 클럽 1회 [취미]",
+    location: "라디오 부스",
+    title: "이시다 아키라의 코다와리 클럽 1회 [취미]",
+    birthday: "2025년 3월 11일",
+    home: "halohaloiitenki",
+    youtubeId: "bX2i38WqbC0",
+    subs: [
+      "안녕하세요 여러분",
+      "이시다 아키라입니다",
+      "오늘의 주제는 취미인데요",
+      "제 취미는 사실",
+      "여러 가지가 있어서",
+      "음...",
+      "특히 요즘에는",
+      "책 읽는 걸 좋아합니다",
+      "조용한 밤에",
+      "차 한 잔과 함께",
+      "그런 시간이 정말 좋죠",
+      "여러분은 어떠세요",
+      "편지 많이 보내주세요",
+    ]
+  },
+   {
+    name: "이시다 아키라의 코다와리 클럽 1회 [취미]",
+    location: "라디오 부스",
+    title: "이시다 아키라의 코다와리 클럽 1회 [취미]",
+    birthday: "2025년 3월 11일",
+    home: "halohaloiitenki",
+    youtubeId: "bX2i38WqbC0",
+    subs: [
+      "안녕하세요 여러분",
+      "이시다 아키라입니다",
+      "오늘의 주제는 취미인데요",
+      "제 취미는 사실",
+      "여러 가지가 있어서",
+      "음...",
+      "특히 요즘에는",
+      "책 읽는 걸 좋아합니다",
+      "조용한 밤에",
+      "차 한 잔과 함께",
+      "그런 시간이 정말 좋죠",
+      "여러분은 어떠세요",
+      "편지 많이 보내주세요",
+    ]
+  },
+   {
+    name: "이시다 아키라의 코다와리 클럽 1회 [취미]",
+    location: "라디오 부스",
+    title: "이시다 아키라의 코다와리 클럽 1회 [취미]",
+    birthday: "2025년 3월 11일",
+    home: "halohaloiitenki",
+    youtubeId: "bX2i38WqbC0",
+    subs: [
+      "안녕하세요 여러분",
+      "이시다 아키라입니다",
+      "오늘의 주제는 취미인데요",
+      "제 취미는 사실",
+      "여러 가지가 있어서",
+      "음...",
+      "특히 요즘에는",
+      "책 읽는 걸 좋아합니다",
+      "조용한 밤에",
+      "차 한 잔과 함께",
+      "그런 시간이 정말 좋죠",
+      "여러분은 어떠세요",
+      "편지 많이 보내주세요",
+    ]
+  },
+];
+
+/* per-heroine persistent state (affection survives back-button) */
+const heroineState = heroines.map(() => ({ affection: 0 }));
+
+/* =========================================================
+   HEROINE SELECT — render cards (with mini affection display)
+   ========================================================= */
+const grid = document.getElementById('heroineGrid');
+heroines.forEach((h, i) => {
+  const card = document.createElement('div');
+  card.className = 'heroine-card';
+  card.dataset.index = i;
+  card.innerHTML = `
+    <div class="silhouette-wrap">
+      <img src="https://img.youtube.com/vi/${h.youtubeId}/hqdefault.jpg" alt="${h.name}">
+    </div>
+    <div class="heroine-label">
+      ${h.name}
+      <span class="loc">@ ${h.location}</span>
+    </div>
+    <div class="aff-mini">
+      <span class="aff-mini-icon">♥</span>
+      <span class="aff-mini-bar"><span class="aff-mini-fill"></span></span>
+      <span class="aff-mini-pct">0%</span>
+    </div>
+  `;
+  card.addEventListener('click', () => openHeroine(i));
+  grid.appendChild(card);
+});
+
+function refreshCard(i) {
+  const card = document.querySelector(`.heroine-card[data-index="${i}"]`);
+  if (!card) return;
+  const a = heroineState[i].affection;
+  card.querySelector('.aff-mini-fill').style.width = a + '%';
+  card.querySelector('.aff-mini-pct').textContent = a + '%';
+}
+heroines.forEach((_, i) => refreshCard(i));
+
+/* =========================================================
+   PAGE TRANSITIONS — wheel between sections
+   ========================================================= */
+const PAGES = ['title', 'heroine-select'];
+let currentPage = 0;
+let transitioning = false;
+let lastWheelTime = 0;
+
+function showPage(idx) {
+  PAGES.forEach((id, i) => {
+    document.getElementById(id).classList.toggle('active', i === idx);
+  });
+  document.querySelectorAll('.page-indicator .dot').forEach((d, i) => {
+    d.classList.toggle('active', i === idx);
+  });
+  currentPage = idx;
+}
+
+/* page indicator dots */
+const indicator = document.getElementById('pageIndicator');
+PAGES.forEach((id, i) => {
+  const dot = document.createElement('button');
+  dot.className = 'dot' + (i === 0 ? ' active' : '');
+  dot.title = id;
+  dot.addEventListener('click', () => {
+    if (transitioning) return;
+    transitioning = true;
+    showPage(i);
+    setTimeout(() => transitioning = false, 700);
+  });
+  indicator.appendChild(dot);
+});
+
+const mainFlowEl = document.getElementById('main-flow');
+
+function tryAdvance(direction) {
+  if (transitioning) return;
+  if (!mainFlowEl.classList.contains('hidden')) return;
+
+  const cur = document.getElementById(PAGES[currentPage]);
+  if (direction > 0) {
+    // scrolling down — only advance if page is at bottom (or non-scrollable)
+    if (cur.scrollHeight - cur.clientHeight - cur.scrollTop > 4) return;
+    if (currentPage < PAGES.length - 1) {
+      transitioning = true;
+      showPage(currentPage + 1);
+      setTimeout(() => transitioning = false, 720);
+    }
+  } else {
+    if (cur.scrollTop > 4) return;
+    if (currentPage > 0) {
+      transitioning = true;
+      showPage(currentPage - 1);
+      setTimeout(() => transitioning = false, 720);
+    }
+  }
+}
+
+window.addEventListener('wheel', (e) => {
+  const now = Date.now();
+  if (now - lastWheelTime < 600) return;
+  if (Math.abs(e.deltaY) < 18) return;
+  lastWheelTime = now;
+  tryAdvance(e.deltaY > 0 ? 1 : -1);
+}, { passive: true });
+
+/* touch swipe (mobile) */
+let touchStartY = null;
+window.addEventListener('touchstart', (e) => {
+  touchStartY = e.touches[0].clientY;
+}, { passive: true });
+window.addEventListener('touchend', (e) => {
+  if (touchStartY === null) return;
+  const dy = touchStartY - (e.changedTouches[0]?.clientY ?? touchStartY);
+  if (Math.abs(dy) > 60) tryAdvance(dy > 0 ? 1 : -1);
+  touchStartY = null;
+}, { passive: true });
+
+/* =========================================================
+   DATE in main flow header
+   ========================================================= */
+(function setDate() {
+  const days = ['일','월','화','수','목','금','토'];
+  const d = new Date();
+  document.getElementById('dateDisplay').textContent =
+    `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 ${days[d.getDay()]}요일`;
+})();
+
+/* =========================================================
+   MAIN FLOW refs + state
+   ========================================================= */
+const mainFlow      = mainFlowEl;
+const closeBtn      = document.getElementById('closeBtn');
+const previewThumb  = document.getElementById('previewThumb');
+const tipBlock      = document.getElementById('tipBlock');
+const tipToggle     = document.getElementById('tipToggle');
+const tipName       = document.getElementById('tipName');
+const tipBirthday   = document.getElementById('tipBirthday');
+const tipHome       = document.getElementById('tipHome');
+const choicesWrap   = document.getElementById('choices');
+const silhouetteWrap = document.getElementById('silhouetteWrap');
+const videoInner    = document.getElementById('videoInner');
+const affFill       = document.getElementById('affectionFill');
+const heart         = document.getElementById('heart');
+const subTitleEl    = document.getElementById('subTitle');
+const subtitleText  = document.getElementById('subtitleText');
+const debug         = document.getElementById('debug');
+
+let affection = 0;
+let currentHeroine = null;
+let currentHeroineIdx = -1;
+let subIndex = 0;
+let subTimer = null;
+let isPlaying = false;
+
+/* =========================================================
+   YouTube IFrame API
+   ========================================================= */
+let ytApiReady = false;
+let currentYtPlayer = null;
+const ytReadyQueue = [];
+
+(function loadYouTubeAPI() {
+  const tag = document.createElement('script');
+  tag.src = "https://www.youtube.com/iframe_api";
+  document.head.appendChild(tag);
+})();
+
+window.onYouTubeIframeAPIReady = function () {
+  ytApiReady = true;
+  while (ytReadyQueue.length) ytReadyQueue.shift()();
+};
+
+function createYouTubePlayer(videoId) {
+  destroyYouTubePlayer();
+  videoInner.innerHTML = '<div id="ytPlayer"></div>';
+
+  const playerVars = {
+    autoplay: 1, mute: 1, rel: 0,
+    modestbranding: 1, playsinline: 1,
+    controls: 1, enablejsapi: 1,
+  };
+  if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+    playerVars.origin = window.location.origin;
+  }
+
+  const create = () => {
+    currentYtPlayer = new YT.Player('ytPlayer', {
+      videoId, width: '100%', height: '100%',
+      playerVars,
+      events: {
+        onReady: (e) => {
+          try {
+            e.target.playVideo();
+            setTimeout(() => {
+              try { e.target.unMute(); e.target.setVolume(70); } catch(_){}
+            }, 150);
+          } catch (err) { console.warn('YT playback error:', err); }
+        },
+        onError: (e) => { console.warn('YT error code:', e.data); }
+      },
+    });
+  };
+
+  if (ytApiReady) create();
+  else ytReadyQueue.push(create);
+}
+
+function destroyYouTubePlayer() {
+  if (currentYtPlayer) {
+    try { currentYtPlayer.destroy(); } catch (e) {}
+    currentYtPlayer = null;
+  }
+  videoInner.innerHTML = '';
+}
+
+/* =========================================================
+   OPEN / CLOSE main flow (with state preservation)
+   ========================================================= */
+function openHeroine(i) {
+  currentHeroine = heroines[i];
+  currentHeroineIdx = i;
+
+  // restore previous affection for this heroine
+  affection = heroineState[i].affection;
+  subIndex = 0;
+  isPlaying = false;
+
+  tipName.textContent = currentHeroine.title;
+  tipBirthday.textContent = currentHeroine.birthday;
+  tipHome.textContent = currentHeroine.home;
+
+  previewThumb.src = `https://img.youtube.com/vi/${currentHeroine.youtubeId}/hqdefault.jpg`;
+  previewThumb.alt = currentHeroine.title;
+
+  subTitleEl.textContent = currentHeroine.title;
+
+  videoInner.innerHTML = `<img src="https://img.youtube.com/vi/${currentHeroine.youtubeId}/maxresdefault.jpg" alt="">`;
+
+  subtitleText.textContent = '';
+  subtitleText.classList.remove('show');
+
+  applyAffection();
+  heart.classList.remove('pulse');
+
+  document.querySelectorAll('.choice').forEach(c => c.classList.remove('disabled'));
+
+  mainFlow.classList.remove('hidden');
+  mainFlow.setAttribute('aria-hidden', 'false');
+  updateDebug();
+}
+
+function closeMainFlow() {
+  // persist affection back to state
+  if (currentHeroineIdx >= 0) {
+    heroineState[currentHeroineIdx].affection = affection;
+    refreshCard(currentHeroineIdx);
+  }
+
+  mainFlow.classList.add('hidden');
+  mainFlow.setAttribute('aria-hidden', 'true');
+  stopSubtitleLoop();
+  isPlaying = false;
+  destroyYouTubePlayer();
+}
+
+closeBtn.addEventListener('click', closeMainFlow);
+
+/* =========================================================
+   tip block toggle
+   ========================================================= */
+tipToggle.addEventListener('click', () => {
+  tipBlock.classList.toggle('collapsed');
+});
+
+/* =========================================================
+   CHOICES — clicks bump affection; first click starts player
+   ========================================================= */
+choicesWrap.addEventListener('click', (e) => {
+  const btn = e.target.closest('.choice');
+  if (!btn || !currentHeroine) return;
+
+  affection = Math.min(100, affection + 8);
+  applyAffection();
+  pulseHeart();
+
+  if (!isPlaying) {
+    isPlaying = true;
+    createYouTubePlayer(currentHeroine.youtubeId);
+    startSubtitleLoop();
+  } else if (currentYtPlayer) {
+    try {
+      currentYtPlayer.unMute();
+      currentYtPlayer.setVolume(70);
+      currentYtPlayer.playVideo();
+    } catch (_) {}
+  }
+
+  btn.style.background = 'var(--soft)';
+  setTimeout(() => { btn.style.background = ''; }, 220);
+
+  updateDebug();
+});
+
+function applyAffection() {
+  let blur = 0;
+  if (affection > 16) {
+    blur = ((affection - 16) / (100 - 16)) * 22;
+  }
+  silhouetteWrap.style.filter = `blur(${blur}px)`;
+  affFill.style.height = affection + '%';
+
+  // monochrome heart: from gray (low) to pure black (high)
+  const lightness = Math.max(8, 60 - affection * 0.55);
+  heart.style.color = `hsl(0, 0%, ${lightness}%)`;
+}
+
+function pulseHeart() {
+  heart.classList.add('pulse');
+  setTimeout(() => heart.classList.remove('pulse'), 280);
+}
+
+/* =========================================================
+   SUBTITLES
+   ========================================================= */
+function startSubtitleLoop() {
+  stopSubtitleLoop();
+  tickSubtitle();
+  subTimer = setInterval(tickSubtitle, 3200);
+}
+
+function stopSubtitleLoop() {
+  if (subTimer) { clearInterval(subTimer); subTimer = null; }
+}
+
+function tickSubtitle() {
+  if (!currentHeroine) return;
+  const skipChance = (affection / 100) * 0.9;
+  subtitleText.classList.remove('show');
+
+  setTimeout(() => {
+    if (Math.random() < skipChance) {
+      subtitleText.textContent = (affection > 70) ? '…' : '';
+    } else {
+      const subs = currentHeroine.subs;
+      subtitleText.textContent = subs[subIndex % subs.length];
+      subIndex++;
+    }
+    subtitleText.classList.add('show');
+  }, 400);
+}
+
+function updateDebug() {
+  const skip = ((affection / 100) * 0.9 * 100).toFixed(0);
+  const blur = ((Math.max(0, affection - 16) / 84) * 22).toFixed(1);
+  debug.textContent = `affection ${affection} / blur ${blur}px / subtitle skip ${skip}%`;
+}
+updateDebug();
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !mainFlow.classList.contains('hidden')) closeMainFlow();
+  if (!mainFlow.classList.contains('hidden')) {
+    if (e.key >= '1' && e.key <= '4') {
+      const idx = parseInt(e.key, 10) - 1;
+      const buttons = choicesWrap.querySelectorAll('.choice');
+      if (buttons[idx]) buttons[idx].click();
+    }
+  } else {
+    // page navigation via arrow keys
+    if (e.key === 'ArrowDown' || e.key === 'PageDown') tryAdvance(1);
+    if (e.key === 'ArrowUp'   || e.key === 'PageUp')   tryAdvance(-1);
+  }
+});
+</script>
+
+</body>
+</html>
